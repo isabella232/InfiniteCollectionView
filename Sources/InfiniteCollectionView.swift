@@ -79,11 +79,21 @@ open class InfiniteCollectionView: UICollectionView {
             centerIfNeeded(self)
         }
     }
+
+    open func reloadInfinity() {
+        isInitialData = false
+        layoutIfNeeded()
+        reloadData()
+    }
+
+    open func correctedIncorectIndex(_ index: Int) -> Int {
+        return correctedIndex(index + indexOffset)
+    }
 }
 
 // MARK: - Private
 
-private extension InfiniteCollectionView {
+fileprivate extension InfiniteCollectionView {
     var itemWidth: CGFloat {
         guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else { return 0 }
         return layout.itemSize.width + layout.minimumInteritemSpacing + layout.minimumLineSpacing
@@ -105,7 +115,10 @@ private extension InfiniteCollectionView {
         let currentOffset = contentOffset
         let centerX = (scrollView.contentSize.width - bounds.width) / 2
         let distFromCenter = centerX - currentOffset.x
-        if abs(distFromCenter) > (totalContentWidth / 4) {
+
+        let numberOfItems = infiniteDataSource?.number(ofItems: self) ?? 0
+
+        if abs(distFromCenter) > (totalContentWidth / 4) && numberOfItems > Me.dummyCount  {
             let cellcount = distFromCenter / itemWidth
             let shiftCells = Int((cellcount > 0) ? floor(cellcount) : ceil(cellcount))
             let offsetCorrection = (abs(cellcount).truncatingRemainder(dividingBy: 1)) * itemWidth
@@ -144,6 +157,10 @@ private extension InfiniteCollectionView {
 extension InfiniteCollectionView: UICollectionViewDataSource {
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         let numberOfItems = infiniteDataSource?.number(ofItems: collectionView) ?? 0
+
+        if numberOfItems <= Me.dummyCount {
+            return numberOfItems
+        }
         return Me.dummyCount * numberOfItems
     }
 
@@ -175,7 +192,7 @@ extension InfiniteCollectionView: UIScrollViewDelegate {
         infiniteDelegate?.scrollViewEndMoved?(scrollView, pageIndex: pageIndex)
     }
 
-    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+    public func scrollViewDidEndDragging( _ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         guard decelerate == false else { return }
         infiniteDelegate?.scrollViewEndMoved?(scrollView, pageIndex: pageIndex)
     }
