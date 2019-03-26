@@ -43,14 +43,14 @@ open class InfiniteCollectionView: UICollectionView {
     }
 
     deinit {
-        NotificationCenter.default.removeObserver(self, name: .UIDeviceOrientationDidChange, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIDevice.orientationDidChangeNotification, object: nil)
     }
 
-    open func rotate(_ notification: Notification) {
+    @objc open func rotate(_ notification: Notification) {
         setContentOffset(CGPoint(x: CGFloat(pageIndex + indexOffset) * itemWidth, y: contentOffset.y), animated: false)
     }
 
-    open override func selectItem(at indexPath: IndexPath?, animated: Bool, scrollPosition: UICollectionViewScrollPosition) {
+    open override func selectItem(at indexPath: IndexPath?, animated: Bool, scrollPosition: UICollectionView.ScrollPosition) {
 
         // Correct the input IndexPath
         let correctedIndexPath = IndexPath(row: correctedIndex(indexPath!.item + indexOffset), section: 0)
@@ -98,14 +98,14 @@ private extension InfiniteCollectionView {
         delegate = self
         dataSource = self
         register(UICollectionViewCell.self, forCellWithReuseIdentifier: Me.defaultIdentifier)
-        NotificationCenter.default.addObserver(self, selector: #selector(InfiniteCollectionView.rotate(_:)), name: .UIDeviceOrientationDidChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(InfiniteCollectionView.rotate(_:)), name: UIDevice.orientationDidChangeNotification, object: nil)
     }
 
     func centerIfNeeded(_ scrollView: UIScrollView) {
         let currentOffset = contentOffset
         let centerX = (scrollView.contentSize.width - bounds.width) / 2
         let distFromCenter = centerX - currentOffset.x
-        if fabs(distFromCenter) > (totalContentWidth / 4) {
+        if abs(distFromCenter) > (totalContentWidth / 4) {
             let cellcount = distFromCenter / itemWidth
             let shiftCells = Int((cellcount > 0) ? floor(cellcount) : ceil(cellcount))
             let offsetCorrection = (abs(cellcount).truncatingRemainder(dividingBy: 1)) * itemWidth
